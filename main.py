@@ -2,8 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 
-# Danh sách các thôn (thay bằng danh sách thực tế của bạn, ví dụ 62 thôn)
-# Danh sách các thôn đã sắp xếp theo alphabet
+# Danh sách các thôn (62 đơn vị, đã sắp xếp theo alphabet)
 villages = [
     "Khối 1",
     "Khối 10",
@@ -37,7 +36,7 @@ villages = [
     "Thôn Đông Thuỷ",
     "Thôn Đường 2",
     "Thôn Dược Hạ",
-    "Thôn Dược Thượng",  # Gộp các xóm và khu của Dược Thượng
+    "Thôn Dược Thượng",
     "Thôn Hoàng Dương",
     "Thôn Hương Đình Đông",
     "Thôn Hương Đình Đoài",
@@ -58,7 +57,7 @@ villages = [
     "Thôn Thượng",
     "Thôn Tuyền",
     "Thôn Vệ Linh",
-    "Thôn Xuân Dục",  # Gộp Khu 418, Xóm Mới, Xóm Tân Lập, Xóm Núi Gơ
+    "Thôn Xuân Dục",
     "Thôn Xuân Đoài",
     "Thôn Xuân Đồng",
     "Thôn Yêm",
@@ -77,14 +76,31 @@ date_list = [start_date + timedelta(days=x) for x in range((end_date - start_dat
 # Hàm tải dữ liệu từ file CSV
 def load_data():
     try:
-        data = pd.read_csv('registrations.csv')
-    except FileNotFoundError:
+        data = pd.read_csv('registrations.csv', encoding='utf-8')
+        if not all(col in data.columns for col in ['Thôn', 'Ngày']):
+            data = pd.DataFrame(columns=['Thôn', 'Ngày'])
+    except (FileNotFoundError, pd.errors.ParserError, UnicodeDecodeError, PermissionError) as e:
+        st.warning(f"Lỗi khi tải registrations.csv: {str(e)}. Tạo DataFrame rỗng mới.")
         data = pd.DataFrame(columns=['Thôn', 'Ngày'])
     return data
 
 # Hàm lưu dữ liệu vào file CSV
 def save_data(data):
-    data.to_csv('registrations.csv', index=False)
+    try:
+        data.to_csv('registrations.csv', index=False, encoding='utf-8')
+    except Exception as e:
+        st.error(f"Lỗi khi lưu registrations.csv: {str(e)}")
+
+# Hàm xóa dữ liệu
+def delete_data():
+    try:
+        empty_data = pd.DataFrame(columns=['Thôn', 'Ngày'])
+        save_data(empty_data)
+        st.success("Đã xóa tất cả dữ liệu đăng ký!")
+        st.session_state.selected_date = None
+        st.rerun()  # Làm mới trang để cập nhật
+    except Exception as e:
+        st.error(f"Lỗi khi xóa dữ liệu: {str(e)}")
 
 # Hàm tạo lịch dạng grid
 def create_calendar():
@@ -109,13 +125,17 @@ def create_calendar():
     return calendar_data
 
 # Giao diện ứng dụng
-st.title("Đăng ký lịch tổ chức Tuyên tuyền tại các thôn, khu, tổ dân phố")
+st.title("Đăng ký lịch tổ chức Tuyên truyền tại các thôn, khu, tổ dân phố")
 
 # Chọn thôn (chỉ hiển thị các thôn chưa đăng ký)
 data = load_data()
 registered_villages = set(data['Thôn'].values)
 available_villages = [v for v in villages if v not in registered_villages]
 village = st.selectbox("Chọn thôn, khu, tổ dân phố:", [""] + available_villages, key="village_select")
+
+# Nút xóa dữ liệu
+if st.button("Xóa tất cả dữ liệu đăng ký"):
+    delete_data()
 
 # Hiển thị lịch
 st.header("Lịch đăng ký")
@@ -190,7 +210,7 @@ if st.session_state.selected_date:
             st.session_state.selected_date = None
             st.rerun()  # Làm mới trang để cập nhật lịch và dropdown
         else:
-            st.success(f"{village} đã đăng ký ngày {datetime.strptime(date, '%Y-%m-%d').strftime('%d/%m/%Y')}!")
+            st.error(f"{village} đã đăng ký ngày {datetime.strptime(date, '%Y-%m-%d').strftime('%d/%m/%Y')}!")
     else:
         st.warning("Vui lòng chọn thôn trước khi đăng ký.")
 
