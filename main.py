@@ -98,7 +98,7 @@ def delete_data():
         save_data(empty_data)
         st.success("Đã xóa tất cả dữ liệu đăng ký!")
         st.session_state.selected_date = None
-        st.rerun()  # Làm mới trang để cập nhật
+        st.rerun()
     except Exception as e:
         st.error(f"Lỗi khi xóa dữ liệu: {str(e)}")
 
@@ -110,9 +110,7 @@ def create_calendar():
     for i, date in enumerate(date_list):
         date_str = date.strftime("%Y-%m-%d")
         day_display = date.strftime("%d/%m")
-        # Lấy danh sách các thôn đã đăng ký cho ngày này
         registered_villages = data[data['Ngày'] == date_str]['Thôn'].values
-        # Nếu có thôn đăng ký, nối thành chuỗi, nếu không thì để None
         village_str = ", ".join(registered_villages) if len(registered_villages) > 0 else None
         week.append({
             'date': date_str,
@@ -127,39 +125,41 @@ def create_calendar():
 # Giao diện ứng dụng
 st.title("Đăng ký lịch tổ chức Tuyên truyền tại các thôn, khu, tổ dân phố")
 
-# Chọn thôn (chỉ hiển thị các thôn chưa đăng ký)
+# Chọn thôn
 data = load_data()
 registered_villages = set(data['Thôn'].values)
 available_villages = [v for v in villages if v not in registered_villages]
 village = st.selectbox("Chọn thôn, khu, tổ dân phố:", [""] + available_villages, key="village_select")
 
 # Nút xóa dữ liệu
-#if st.button("Xóa tất cả dữ liệu đăng ký"):
-    #delete_data()
+if st.button("Xóa tất cả dữ liệu đăng ký"):
+    delete_data()
 
 # Hiển thị lịch
 st.header("Lịch đăng ký")
 
-# CSS để định dạng ô lịch
+# CSS tối ưu cho cả desktop và mobile
 st.markdown("""
     <style>
         .calendar-grid {
             display: grid;
-            grid-template-columns: repeat(7, 120px);
+            grid-template-columns: repeat(7, 14vw);
             gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 10px;
         }
         .stButton>button {
             width: 100%;
-            min-height: 80px;
+            min-height: 10vh;
             border: 1px solid #ccc;
             border-radius: 5px;
             background-color: #f9f9f9;
-            font-size: 14px;
+            font-size: 2.5vw; /* Kích thước chữ điều chỉnh theo màn hình */
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 10px;
+            padding: 8px;
             white-space: pre-wrap;
         }
         .stButton>button:hover {
@@ -168,6 +168,27 @@ st.markdown("""
         .stButton>button:disabled {
             background-color: #a9a9a9 !important;
             color: white;
+        }
+        /* Media query cho màn hình nhỏ (điện thoại) */
+        @media (max-width: 600px) {
+            .calendar-grid {
+                grid-template-columns: repeat(7, 20vw);
+            }
+            .stButton>button {
+                font-size: 3vw;
+                min-height: 12vh;
+                padding: 5px;
+            }
+        }
+        /* Tối ưu bảng đăng ký */
+        .stDataFrame {
+            overflow-x: auto;
+            font-size: 2.5vw;
+        }
+        @media (max-width: 600px) {
+            .stDataFrame {
+                font-size: 3.5vw;
+            }
         }
     </style>
 """, unsafe_allow_html=True)
@@ -182,14 +203,10 @@ for week in calendar_data:
     cols = st.columns(7)
     for i, day in enumerate(week):
         with cols[i]:
-            # Tạo container cho mỗi ô ngày
             day_container = st.container()
-            # Tạo key duy nhất cho mỗi nút
             button_key = f"button_{day['date']}"
-            # Kiểm tra trạng thái nút
             is_registered = day['villages'] is not None
             button_label = f"{day['display']}\n{day['villages']}" if is_registered else day['display']
-            # Tạo nút với nhãn
             if day_container.button(button_label, key=button_key):
                 if not village:
                     st.warning("Vui lòng chọn thôn trước khi đăng ký.")
@@ -201,14 +218,13 @@ if st.session_state.selected_date:
     date = st.session_state.selected_date
     if village:
         data = load_data()
-        # Kiểm tra xem thôn đã đăng ký ngày này chưa
         if data[(data['Thôn'] == village) & (data['Ngày'] == date)].empty:
             new_registration = pd.DataFrame({'Thôn': [village], 'Ngày': [date]})
             data = pd.concat([data, new_registration], ignore_index=True)
             save_data(data)
             st.success(f"Đã đăng ký thành công cho {village} vào ngày {datetime.strptime(date, '%Y-%m-%d').strftime('%d/%m/%Y')}")
             st.session_state.selected_date = None
-            st.rerun()  # Làm mới trang để cập nhật lịch và dropdown
+            st.rerun()
         else:
             st.error(f"{village} đã đăng ký ngày {datetime.strptime(date, '%Y-%m-%d').strftime('%d/%m/%Y')}!")
     else:
@@ -218,7 +234,6 @@ if st.session_state.selected_date:
 st.header("Bảng đăng ký hiện tại")
 data = load_data()
 if not data.empty:
-    # Định dạng lại ngày để hiển thị
     display_data = data.copy()
     display_data['Ngày'] = display_data['Ngày'].apply(lambda x: datetime.strptime(x, '%Y-%m-%d').strftime('%d/%m/%Y'))
     st.table(display_data)
