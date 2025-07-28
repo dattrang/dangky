@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 
-# Danh sách các thôn (62 đơn vị, đã xếp theo alfabet)
+# Danh sách các thôn (62 đơn vị, đã sắp xếp theo alphabet)
 villages = [
     "Khối 1",
     "Khối 10",
@@ -19,7 +19,7 @@ villages = [
     "Khối 8",
     "Khối 9",
     "Khu 418",
-    "Khu Thủy lợi",
+    "Khu Thuỷ Lợi 2",
     "Thôn 17",
     "Thôn 25",
     "Thôn Ấp Cút",
@@ -28,17 +28,17 @@ villages = [
     "Thôn Chôi",
     "Thôn Cộng Hòa",
     "Thôn Đạc Tài",
-    "Thôn Dân Tảo",
+    "Thôn Đan Tảo",
     "Thôn Đồng Chầm",
     "Thôn Đồng Dành",
     "Thôn Đồng Lạc",
     "Thôn Đông Bài",
-    "Thôn Đông Thủy",
+    "Thôn Đông Thuỷ",
     "Thôn Đường 2",
     "Thôn Dược Hạ",
     "Thôn Dược Thượng",
     "Thôn Hoàng Dương",
-    "Thôn Hương Đông",
+    "Thôn Hương Đình Đông",
     "Thôn Hương Đình Đoài",
     "Thôn Lạc Nông",
     "Thôn Lương Châu",
@@ -143,54 +143,57 @@ st.markdown("""
     <style>
         .calendar-grid {
             display: grid;
-            grid-template-columns: repeat(7, 10vw);
+            grid-template-columns: repeat(7, 12vw);
             gap: 6px;
             overflow-x: auto;
             padding-bottom: 8px;
         }
         .stButton>button {
             width: 100%;
-            min-height: 8vh;
-            max-height: 12vh;
+            min-height: 10vh;
+            max-height: 15vh;
             border: 1px solid #ccc;
             border-radius: 5px;
-            background-color: #f9f9f9;
-            font-size: 1.8vw;
+            background-color: #ffffff;
+            color: #000000 !important;
+            font-size: 3vw;
             display: flex;
             align-items: center;
             justify-content: center;
             text-align: center;
             padding: 5px;
-            white-space: pre-wrap;
-            overflow-y: auto;
+            white-space: normal;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .stButton>button:hover {
             background-color: #e0e0e0;
         }
         .stButton>button:disabled {
             background-color: #a9a9a9 !important;
-            color: white;
+            color: #ffffff !important;
         }
         /* Media query cho màn hình nhỏ (điện thoại) */
         @media (max-width: 600px) {
             .calendar-grid {
-                grid-template-columns: repeat(7, 15vw);
+                grid-template-columns: repeat(7, 18vw);
             }
             .stButton>button {
-                font-size: 2.5vw;
-                min-height: 10vh;
-                max-height: 15vh;
+                font-size: 4vw;
+                min-height: 12vh;
+                max-height: 18vh;
                 padding: 4px;
             }
         }
         /* Tối ưu bảng đăng ký */
         .stDataFrame {
             overflow-x: auto;
-            font-size: 2vw;
+            font-size: 2.5vw;
+            color: #000000;
         }
         @media (max-width: 600px) {
             .stDataFrame {
-                font-size: 3vw;
+                font-size: 3.5vw;
             }
         }
     </style>
