@@ -201,19 +201,24 @@ st.markdown("""
             background-color: #4CAF50 !important;
             color: white !important;
             margin-right: 10px;
+            font-size: 2.5vw !important;
         }
         .cancel-button {
             background-color: #f44336 !important;
             color: white !important;
+            font-size: 2.5vw !important;
+        }
+        @media (max-width: 600px) {
+            .confirm-button, .cancel-button {
+                font-size: 3.5vw !important;
+            }
         }
     </style>
 """, unsafe_allow_html=True)
 
-# Tạo session state để lưu trạng thái đăng ký và xác nhận
+# Tạo session state để lưu trạng thái đăng ký
 if 'selected_date' not in st.session_state:
     st.session_state.selected_date = None
-if 'confirm_registration' not in st.session_state:
-    st.session_state.confirm_registration = False
 
 # Hiển thị lưới lịch
 calendar_data = create_calendar()
@@ -230,39 +235,29 @@ for week in calendar_data:
                     st.warning("Vui lòng chọn thôn trước khi đăng ký.")
                 else:
                     st.session_state.selected_date = day['date']
-                    st.session_state.confirm_registration = True
-
-# Xử lý xác nhận đăng ký
-if st.session_state.confirm_registration and st.session_state.selected_date:
-    date = st.session_state.selected_date
-    if village:
-        formatted_date = datetime.strptime(date, '%Y-%m-%d').strftime('%d/%m/%Y')
-        st.warning(f"Có chọn lịch ngày {formatted_date} cho {village} không?")
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("Xác nhận", key="confirm_button", help="Xác nhận đăng ký", type="primary"):
-                data = load_data()
-                if data[(data['Thôn'] == village) & (data['Ngày'] == date)].empty:
-                    new_registration = pd.DataFrame({'Thôn': [village], 'Ngày': [date]})
-                    data = pd.concat([data, new_registration], ignore_index=True)
-                    save_data(data)
-                    st.success(f"Đã đăng ký thành công cho {village} vào ngày {formatted_date}")
-                    st.session_state.selected_date = None
-                    st.session_state.confirm_registration = False
-                    st.rerun()
-                else:
-                    st.error(f"{village} đã đăng ký ngày {formatted_date}!")
-                    st.session_state.selected_date = None
-                    st.session_state.confirm_registration = False
-        with col2:
-            if st.button("Hủy", key="cancel_button", help="Hủy đăng ký"):
-                st.session_state.selected_date = None
-                st.session_state.confirm_registration = False
-                st.rerun()
-    else:
-        st.warning("Vui lòng chọn thôn trước khi đăng ký.")
-        st.session_state.selected_date = None
-        st.session_state.confirm_registration = False
+            
+            # Hiển thị thông báo xác nhận ngay dưới ngày được chọn
+            if st.session_state.selected_date == day['date'] and village:
+                formatted_date = datetime.strptime(day['date'], '%Y-%m-%d').strftime('%d/%m/%Y')
+                day_container.warning(f"Có chọn lịch ngày {formatted_date} cho {village} không?")
+                col1, col2 = day_container.columns(2)
+                with col1:
+                    if st.button("Xác nhận", key=f"confirm_{day['date']}", help="Xác nhận đăng ký", type="primary"):
+                        data = load_data()
+                        if data[(data['Thôn'] == village) & (data['Ngày'] == day['date'])].empty:
+                            new_registration = pd.DataFrame({'Thôn': [village], 'Ngày': [day['date']]})
+                            data = pd.concat([data, new_registration], ignore_index=True)
+                            save_data(data)
+                            st.success(f"Đã đăng ký thành công cho {village} vào ngày {formatted_date}")
+                            st.session_state.selected_date = None
+                            st.rerun()
+                        else:
+                            st.error(f"{village} đã đăng ký ngày {formatted_date}!")
+                            st.session_state.selected_date = None
+                with col2:
+                    if st.button("Hủy", key=f"cancel_{day['date']}", help="Hủy đăng ký"):
+                        st.session_state.selected_date = None
+                        st.rerun()
 
 # Hiển thị bảng đăng ký
 st.header("Bảng đăng ký hiện tại")
