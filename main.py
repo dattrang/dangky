@@ -132,8 +132,8 @@ available_villages = [v for v in villages if v not in registered_villages]
 village = st.selectbox("Chọn thôn, khu, tổ dân phố:", [""] + available_villages, key="village_select")
 
 # Nút xóa dữ liệu
-if st.button("Xóa tất cả dữ liệu đăng ký"):
-    delete_data()
+#if st.button("Xóa tất cả dữ liệu đăng ký"):
+   # delete_data()
 
 # Hiển thị lịch
 st.header("Lịch đăng ký")
